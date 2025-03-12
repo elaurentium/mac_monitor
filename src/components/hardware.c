@@ -6,6 +6,7 @@
 #include <net/if.h>
 #include <sys/mount.h>
 #include <math.h>
+#include <unistd.h>
 #include <DiskArbitration/DiskArbitration.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include "../config/config.h"
@@ -27,33 +28,44 @@ HardwareStats init_hardware_stats() {
 
 int get_cpu_usage(unsigned int* result) {
     natural_t cpu_count;
-    processor_cpu_load_info_t cpu_load;
-    mach_msg_type_number_t info_count;
+    processor_cpu_load_info_t cpu_load1, cpu_load2;
+    mach_msg_type_number_t info_count1, info_count2;
 
+    // Primeira amostra
     kern_return_t err = host_processor_info(
-        mach_host_self(),
-        PROCESSOR_CPU_LOAD_INFO,
-        &cpu_count,
-        (processor_info_array_t*)&cpu_load,
-        &info_count
+        mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count,
+        (processor_info_array_t*)&cpu_load1, &info_count1
     );
     if (err != KERN_SUCCESS) {
-        printf("Erro em get_cpu_usage: host_processor_info falhou (%d)\n", err);
+        printf("Erro na primeira amostra: %d\n", err);
+        return -1;
+    }
+
+    sleep(1);
+
+    err = host_processor_info(
+        mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count,
+        (processor_info_array_t*)&cpu_load2, &info_count2
+    );
+    if (err != KERN_SUCCESS) {
+        printf("Erro na segunda amostra: %d\n", err);
+        vm_deallocate(mach_task_self(), (vm_address_t)cpu_load1, info_count1);
         return -1;
     }
 
     unsigned int total_usage = 0;
     for (natural_t i = 0; i < cpu_count; i++) {
-        unsigned int user = cpu_load[i].cpu_ticks[CPU_STATE_USER];
-        unsigned int system = cpu_load[i].cpu_ticks[CPU_STATE_SYSTEM];
-        unsigned int idle = cpu_load[i].cpu_ticks[CPU_STATE_IDLE];
-        unsigned int total = user + system + idle;
-        if (total > 0) {
-            total_usage += (user + system) * 100 / total;
+        unsigned int user_diff = cpu_load2[i].cpu_ticks[CPU_STATE_USER] - cpu_load1[i].cpu_ticks[CPU_STATE_USER];
+        unsigned int system_diff = cpu_load2[i].cpu_ticks[CPU_STATE_SYSTEM] - cpu_load1[i].cpu_ticks[CPU_STATE_SYSTEM];
+        unsigned int idle_diff = cpu_load2[i].cpu_ticks[CPU_STATE_IDLE] - cpu_load1[i].cpu_ticks[CPU_STATE_IDLE];
+        unsigned int total_diff = user_diff + system_diff + idle_diff;
+        if (total_diff > 0) {
+            total_usage += (user_diff + system_diff) * 100 / total_diff;
         }
     }
 
-    vm_deallocate(mach_task_self(), (vm_address_t)cpu_load, info_count);
+    vm_deallocate(mach_task_self(), (vm_address_t)cpu_load1, info_count1);
+    vm_deallocate(mach_task_self(), (vm_address_t)cpu_load2, info_count2);
     *result = total_usage / (cpu_count > 0 ? cpu_count : 1);
     return 0;
 }
@@ -63,18 +75,20 @@ int get_memory_stats(double* used, double* total) {
     mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
 
     kern_return_t err = host_statistics64(
-        mach_host_self(),
-        HOST_VM_INFO64,
-        (host_info64_t)&vm_stat,
-        &count
+        mach_host_self(), HOST_VM_INFO64, (host_info64_t)&vm_stat, &count
     );
     if (err != KERN_SUCCESS) {
-        printf("Erro em get_memory_stats: host_statistics64 falhou (%d)\n", err);
+        printf("Erro em get_memory_stats: %d\n", err);
         return -1;
     }
 
     double page_size = (double)vm_page_size;
-    *used = (double)(vm_stat.active_count + vm_stat.wire_count) * page_size / 1073741824.0;
+    *used = (double)(
+        vm_stat.active_count + 
+        vm_stat.wire_count + 
+        vm_stat.inactive_count + 
+        vm_stat.compressor_page_count
+    ) * page_size / 1073741824.0;
     *used = round(*used * 10.0) / 10.0;
 
     int mib[2] = {CTL_HW, HW_MEMSIZE};
@@ -89,7 +103,6 @@ int get_memory_stats(double* used, double* total) {
     *total = round(*total * 10.0) / 10.0;
     return 0;
 }
-
 
 int get_network_stats(double* in_mb, double* out_mb) {
     struct ifaddrs* ifaddr;
@@ -209,4 +222,3 @@ int get_hardware_stats(Config config, HardwareStats* stats) {
 
     return 0;
 }
-

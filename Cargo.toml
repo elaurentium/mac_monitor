@@ -13,3 +13,6 @@ panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[target.aarch64-apple-darwin]
+rustc-flags = "-C target-cpu=native"

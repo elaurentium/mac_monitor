@@ -2,6 +2,8 @@ fn main() {
     cc::Build::new()
         .file("src/config/config.c")
         .file("src/components/hardware.c")
+        .flag("-arch")
+        .flag("arm64")
         .compile("monitor");
 
     // linker do Cargo
