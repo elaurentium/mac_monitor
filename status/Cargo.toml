@@ -1,0 +1,21 @@
+[package]
+name = "mac_monitor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }  # Para serialização (Serialize)
+core-foundation = "0.9"  # Para interagir com Core Foundation (CFDictionaryRef)
+libc = "0.2"  # Para chamadas de sistema como statvfs, getifaddrs, sysctl
+IOKit-sys = "0.1.5"  # Para interagir com IOKit (SMC, IOHIDSensors, IOReport)
+cocoa = "0.25"  # Para criar itens na barra de status do macOS
+objc = "0.2"  # Para chamadas Objective-C no macOS
+pnet = "0.35"  # Para estatísticas de rede (alternativa ao getifaddrs)
+serde_json = "1.0"
+
+[build-dependencies]
+cc = "1.0"  # Para compilar código C (necessário para as funções extern "C")
+
+[lib]
+name = "system_monitor"
+crate-type = ["staticlib", "dylib"]

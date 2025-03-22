@@ -1,0 +1,1 @@
+swiftc -o system_monitor src/main.swift

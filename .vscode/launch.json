@@ -1,0 +1,76 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mac_monitor}/src/bar",
+            "name": "Debug bar (src/bar)",
+            "program": "${workspaceFolder:mac_monitor}/src/bar/.build/debug/bar",
+            "preLaunchTask": "swift: Build Debug bar (src/bar)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mac_monitor}/src/bar",
+            "name": "Release bar (src/bar)",
+            "program": "${workspaceFolder:mac_monitor}/src/bar/.build/release/bar",
+            "preLaunchTask": "swift: Build Release bar (src/bar)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mac_monitor}/src/bar_monitor",
+            "name": "Debug bar_monitor (src/bar_monitor)",
+            "program": "${workspaceFolder:mac_monitor}/src/bar_monitor/.build/debug/bar_monitor",
+            "preLaunchTask": "swift: Build Debug bar_monitor (src/bar_monitor)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mac_monitor}/src/bar_monitor",
+            "name": "Release bar_monitor (src/bar_monitor)",
+            "program": "${workspaceFolder:mac_monitor}/src/bar_monitor/.build/release/bar_monitor",
+            "preLaunchTask": "swift: Build Release bar_monitor (src/bar_monitor)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mac_monitor}/src/bar_monitor",
+            "name": "Debug bar (src/bar_monitor)",
+            "program": "${workspaceFolder:mac_monitor}/src/bar_monitor/.build/debug/bar",
+            "preLaunchTask": "swift: Build Debug bar (src/bar_monitor)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mac_monitor}/src/bar_monitor",
+            "name": "Release bar (src/bar_monitor)",
+            "program": "${workspaceFolder:mac_monitor}/src/bar_monitor/.build/release/bar",
+            "preLaunchTask": "swift: Build Release bar (src/bar_monitor)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mac_monitor}/bar",
+            "name": "Debug bar (bar)",
+            "program": "${workspaceFolder:mac_monitor}/bar/.build/debug/bar",
+            "preLaunchTask": "swift: Build Debug bar (bar)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mac_monitor}/bar",
+            "name": "Release bar (bar)",
+            "program": "${workspaceFolder:mac_monitor}/bar/.build/release/bar",
+            "preLaunchTask": "swift: Build Release bar (bar)"
+        }
+    ]
+}
