@@ -43,11 +43,9 @@ use module::m1::chip::Sampler;
 //     fn config_default() -> Config;
 // }
 
-
-#[tokio::main]
 async fn main() {
     let mut disk_sampler = DiskSampler::new().expect("Falha ao inicializar DiskSampler");
-    let mut network_sampler = NetworkSampler::new()?.expect("Falha ao inicializar NetworkSampler");
+    let mut network_sampler = NetworkSampler::new().expect("Falha ao inicializar NetworkSampler");
     let mut sampler = Sampler::new().expect("Falha ao inicializar Sampler");
 
 
@@ -73,7 +71,7 @@ async fn main() {
     loop {
         // Obter métricas dos samplers
         let disk_metrics = disk_sampler.get_metrics().expect("Falha ao obter métricas de disco");
-        let network_metrics = network_sampler.get_metrics().expect("Falha ao obter métricas de rede").await?;
+        let network_metrics = network_sampler.get_metrics().expect("Falha ao obter métricas de rede");
         let metrics = sampler.get_metrics(1000).expect("Falha ao obter métricas do sistema"); // 1000ms de duração
 
         // Imprimir as métricas no terminal

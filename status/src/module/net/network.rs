@@ -1,5 +1,7 @@
 use serde::Serialize;
 use std::time::Instant;
+use std::process::Command;
+use std::io;
 
 type WithError<T> = Result<T, Box<dyn std::error::Error>>;
 
@@ -31,25 +33,41 @@ impl NetworkSampler {
         })
     }
 
-    async fn get_network_stats(&self) -> WithError<(u64, u64)> {
-        use heim::net::io_counters;
+    fn get_network_stats(&self) -> WithError<(u64, u64)> {
+        let output = Command::new("netstat")
+            .arg("-ib") // Interface bytes
+            .output()?;
 
-        let counters = io_counters().await?;
+        if !output.status.success() {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::Other,
+                "netstat command failed",
+            )));
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
         let mut total_down = 0;
         let mut total_up = 0;
 
-        // Sum network stats across all interfaces
-        for counter in counters {
-            let counter = counter?;
-            total_down += counter.bytes_in().get::<heim::units::information::byte>();
-            total_up += counter.bytes_out().get::<heim::units::information::byte>();
+        // Parse netstat -ib output
+        for line in stdout.lines().skip(1) { // Skip header
+            let fields: Vec<&str> = line.split_whitespace().collect();
+            if fields.len() >= 7 {
+                // Fields: Name, Mtu, Network, Address, Ipkts, Ibytes, Opkts, Obytes
+                if let Ok(ibytes) = fields[5].parse::<u64>() { // Input bytes
+                    total_down += ibytes;
+                }
+                if let Ok(obytes) = fields[7].parse::<u64>() { // Output bytes
+                    total_up += obytes;
+                }
+            }
         }
 
         Ok((total_down, total_up))
     }
 
-    pub async fn get_metrics(&mut self) -> WithError<NetworkMetrics> {
-        let (current_down, current_up) = self.get_network_stats().await?;
+    pub fn get_metrics(&mut self) -> WithError<NetworkMetrics> {
+        let (current_down, current_up) = self.get_network_stats()?;
         let now = Instant::now();
         let elapsed = now.duration_since(self.last_time).as_secs_f64();
 
