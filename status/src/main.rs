@@ -1,4 +1,5 @@
 
+use core::net;
 use std::thread;
 use std::time::Duration;
 
@@ -42,9 +43,11 @@ use module::m1::chip::Sampler;
 //     fn config_default() -> Config;
 // }
 
-fn main() {
-    // let mut disk_sampler = DiskSampler::new().expect("Falha ao inicializar DiskSampler");
-    // let mut network_sampler = NetworkSampler::new().expect("Falha ao inicializar NetworkSampler");
+
+#[tokio::main]
+async fn main() {
+    let mut disk_sampler = DiskSampler::new().expect("Falha ao inicializar DiskSampler");
+    let mut network_sampler = NetworkSampler::new()?.expect("Falha ao inicializar NetworkSampler");
     let mut sampler = Sampler::new().expect("Falha ao inicializar Sampler");
 
 
@@ -69,21 +72,26 @@ fn main() {
     // Loop principal
     loop {
         // Obter métricas dos samplers
-        //let disk_metrics = disk_sampler.get_metrics().expect("Falha ao obter métricas de disco");
-        //let network_metrics = network_sampler.get_metrics().expect("Falha ao obter métricas de rede");
+        let disk_metrics = disk_sampler.get_metrics().expect("Falha ao obter métricas de disco");
+        let network_metrics = network_sampler.get_metrics().expect("Falha ao obter métricas de rede").await?;
         let metrics = sampler.get_metrics(1000).expect("Falha ao obter métricas do sistema"); // 1000ms de duração
 
         // Imprimir as métricas no terminal
         println!("Estatísticas do Sistema:");
         println!(
-            "CPU: {:.1}% ({} MHz) || Temp: CPU {:.1}°C || GPU {:.1}°C || RAM: {:.2}/{:.2} GB ({:.1}%)",
+            "CPU: {:.1}% ({} MHz) | Temp: CPU {:.1}°C | GPU {:.1}°C | RAM: {:.2}/{:.2} GB ({:.1}%) | Disk: {:.2}/{:.2} GB ({:.1}%) | Net: {:.2}/{:.2} GB ({:.1}%)",
             metrics.ecpu_usage.1 * 100.0,
             metrics.ecpu_usage.0,
             metrics.temp.cpu_temp,
             metrics.temp.gpu_temp,
             metrics.memory.ram_usage as f64 / 1024.0 / 1024.0 / 1024.0,
             metrics.memory.ram_total as f64 / 1024.0 / 1024.0 / 1024.0,
-            (metrics.memory.ram_usage as f64 / metrics.memory.ram_total as f64) * 100.0
+            (metrics.memory.ram_usage as f64 / metrics.memory.ram_total as f64) * 100.0,
+            disk_metrics.used_space as f64 / 1024.0 / 1024.0 / 1024.0,
+            disk_metrics.total_space as f64 / 1024.0 / 1024.0 / 1024.0,
+            (disk_metrics.used_space as f64 / disk_metrics.total_space as f64) * 100.0,
+            network_metrics.download_bytes as f64 / 1024.0 / 1024.0,
+            network_metrics.upload_bytes as f64 / 1024.0 / 1024.0
         );
         // if config.settings.show_disk {
         //     println!(

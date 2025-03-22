@@ -31,12 +31,25 @@ impl NetworkSampler {
         })
     }
 
-    fn get_network_stats(&self) -> WithError<(u64, u64)> {
-        Ok((0, 0)) // Placeholder
+    async fn get_network_stats(&self) -> WithError<(u64, u64)> {
+        use heim::net::io_counters;
+
+        let counters = io_counters().await?;
+        let mut total_down = 0;
+        let mut total_up = 0;
+
+        // Sum network stats across all interfaces
+        for counter in counters {
+            let counter = counter?;
+            total_down += counter.bytes_in().get::<heim::units::information::byte>();
+            total_up += counter.bytes_out().get::<heim::units::information::byte>();
+        }
+
+        Ok((total_down, total_up))
     }
 
-    pub fn get_metrics(&mut self) -> WithError<NetworkMetrics> {
-        let (current_down, current_up) = self.get_network_stats()?;
+    pub async fn get_metrics(&mut self) -> WithError<NetworkMetrics> {
+        let (current_down, current_up) = self.get_network_stats().await?;
         let now = Instant::now();
         let elapsed = now.duration_since(self.last_time).as_secs_f64();
 
