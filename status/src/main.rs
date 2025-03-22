@@ -76,7 +76,7 @@ fn main() {
         // Imprimir as métricas no terminal
         println!("Estatísticas do Sistema:");
         println!(
-            "  CPU: {:.1}% ({} MHz) || Temp: CPU {:.1}°C || GPU {:.1}°C || RAM: {:.2}/{:.2} GB ({:.1}%)",
+            "CPU: {:.1}% ({} MHz) || Temp: CPU {:.1}°C || GPU {:.1}°C || RAM: {:.2}/{:.2} GB ({:.1}%)",
             metrics.ecpu_usage.1 * 100.0,
             metrics.ecpu_usage.0,
             metrics.temp.cpu_temp,
