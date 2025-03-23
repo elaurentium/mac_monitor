@@ -1,4 +1,5 @@
 use serde::Serialize;
+use sysinfo::{Disks, System};
 use std::io;
 use std::process::Command;
 
@@ -31,9 +32,9 @@ impl DiskSampler {
 
     fn get_disk_io(&self) -> WithError<(u64, u64)> {
         let output = Command::new("iostat")
-            .arg("-d")  // Disk stats
-            .arg("-c")  // Count (optional, adjust as needed)
-            .output()?;
+            .args(&["-d", "-I"])  // Disk stats
+            .output()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
         if !output.status.success() {
             return Err(Box::new(io::Error::new(
@@ -63,39 +64,22 @@ impl DiskSampler {
     }
 
     pub fn get_metrics(&mut self) -> WithError<DiskMetrics> {
-        let path = "/";
-        let statvfs = unsafe {
-            let mut statvfs = std::mem::zeroed::<libc::statvfs>();
-            if libc::statvfs(path.as_ptr() as *const i8, &mut statvfs) != 0 {
-                return Err(Box::new(io::Error::last_os_error()));
-            }
-            statvfs
-        };
+        let disks = Disks::new_with_refreshed_list();
+        let disk = disks.list().first().ok_or("No disk found")?;
 
-        let block_size = statvfs.f_frsize as u64;
-        let total_space = statvfs.f_blocks as u64 * block_size;
-        let free_space = statvfs.f_bavail as u64 * block_size;
+        let total_space = disk.total_space();
+        let free_space = disk.available_space();
         let used_space = total_space - free_space;
 
-        let (current_read, current_write) = self.get_disk_io()?;
+        let (read_bytes, write_bytes) = self.get_disk_io()?;
+
         let now = std::time::Instant::now();
-        let elapsed = now.duration_since(self.last_time).as_secs_f64();
-
-        let read_bytes = if elapsed > 0.0 {
-            ((current_read.saturating_sub(self.last_read)) as f64 / elapsed) as u64
-        } else {
-            current_read // Use raw value if no elapsed time
-        };
-        
-        let write_bytes = if elapsed > 0.0 {
-            ((current_write.saturating_sub(self.last_write)) as f64 / elapsed) as u64
-        } else {
-            current_write // Use raw value if no elapsed time
-        };
-
-        self.last_read = current_read;
-        self.last_write = current_write;
-        self.last_time = now;
+        let elapsed = now.duration_since(self.last_time);
+        if elapsed.as_secs() >= 1 {
+            self.last_read = read_bytes;
+            self.last_write = write_bytes;
+            self.last_time = now;
+        }
 
         Ok(DiskMetrics {
             total_space,

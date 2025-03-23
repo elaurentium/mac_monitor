@@ -1,6 +1,3 @@
-use std::thread;
-use std::time::Duration;
-
 mod module {
     pub mod m1 {
         pub mod chip;

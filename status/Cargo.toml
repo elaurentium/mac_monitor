@@ -11,9 +11,8 @@ IOKit-sys = "0.1.5"  # Para interagir com IOKit (SMC, IOHIDSensors, IOReport)
 cocoa = "0.25"  # Para criar itens na barra de status do macOS
 objc = "0.2"  # Para chamadas Objective-C no macOS
 pnet = "0.35"  # Para estatísticas de rede (alternativa ao getifaddrs)
-heim = { version = "0.1.0-rc.1" }
-tokio = { version = "1", features = ["full"] }
 serde_json = "1.0"
+sysinfo = "0.33.1"
 
 [build-dependencies]
 cc = "1.0"  # Para compilar código C (necessário para as funções extern "C")
