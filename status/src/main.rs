@@ -75,34 +75,17 @@ fn main() {
         // Imprimir as métricas no terminal
         println!("Estatísticas do Sistema:");
         println!(
-            "CPU: {:.1}% ({} MHz) | Temp: CPU {:.1}°C | GPU {:.1}°C | RAM: {:.2}/{:.2} GB ({:.1}%) | Disk: {:.2}/{:.2} GB ({:.1}%) | Net: {:.2}/{:.2}",
+            "CPU: {:.1}% ({} MHz) | Temp: CPU {:.1}°C | GPU {:.1}°C | RAM: {:.2} GB | Disk: {:.2}/{:.2} GB | Net: {:.2}/{:.2}",
             metrics.ecpu_usage.1 * 100.0,
             metrics.ecpu_usage.0,
             metrics.temp.cpu_temp,
             metrics.temp.gpu_temp,
             metrics.memory.ram_usage as f64 / 1024.0 / 1024.0 / 1024.0,
-            metrics.memory.ram_total as f64 / 1024.0 / 1024.0 / 1024.0,
-            (metrics.memory.ram_usage as f64 / metrics.memory.ram_total as f64) * 100.0,
             disk_metrics.used_space as f64 / 1024.0 / 1024.0 / 1024.0,
             disk_metrics.total_space as f64 / 1024.0 / 1024.0 / 1024.0,
-            (disk_metrics.used_space as f64 / disk_metrics.total_space as f64) * 100.0,
             network_metrics.download_bytes as f64 / 1024.0 / 1024.0,
             network_metrics.upload_bytes as f64 / 1024.0 / 1024.0,
-            //((network_metrics.download_bytes + network_metrics.upload_bytes) as f64 / (1024.0 * 1024.0 * 1024.0)) * 100.0,
         );
-        // if config.settings.show_disk {
-        //     println!(
-        //         "  Disco: {:.2}/{:.2} GB ({:.1}%)",
-        //         disk_metrics.used_space as f64 / 1024.0 / 1024.0 / 1024.0,
-        //         disk_metrics.total_space as f64 / 1024.0 / 1024.0 / 1024.0,
-        //         (disk_metrics.used_space as f64 / disk_metrics.total_space as f64) * 100.0
-        //     );
-        // }
-        // println!(
-        //     "  Rede: Download {:.2} KB/s, Upload {:.2} KB/s",
-        //     network_metrics.download_bytes as f64 / 1024.0,
-        //     network_metrics.upload_bytes as f64 / 1024.0
-        // );
 
         // Aguarda o intervalo definido
         thread::sleep(Duration::from_secs(1));

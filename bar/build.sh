@@ -1,1 +1,1 @@
-swiftc -o system_monitor src/main.swift
+swiftc -o system_monitor main.swift AppDelegate.swift SystemMonitorApp-Bridging-Header.m

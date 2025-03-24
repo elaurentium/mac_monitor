@@ -10,8 +10,6 @@ pub struct DiskMetrics {
     pub total_space: u64,
     pub used_space: u64,
     pub free_space: u64,
-    pub read_bytes: u64,
-    pub write_bytes: u64,
 }
 
 #[allow(dead_code)]
@@ -71,22 +69,10 @@ impl DiskSampler {
         let free_space = disk.available_space();
         let used_space = total_space - free_space;
 
-        let (read_bytes, write_bytes) = self.get_disk_io()?;
-
-        let now = std::time::Instant::now();
-        let elapsed = now.duration_since(self.last_time);
-        if elapsed.as_secs() >= 1 {
-            self.last_read = read_bytes;
-            self.last_write = write_bytes;
-            self.last_time = now;
-        }
-
         Ok(DiskMetrics {
             total_space,
             used_space,
             free_space,
-            read_bytes,
-            write_bytes,
         })
     }
 }
